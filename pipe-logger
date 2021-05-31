@@ -9,9 +9,12 @@ count     = 10
 fsync     = false
 timestamp = false
 gzip      = false
+putstderr = false
+
+$stderr.sync = $stdout.sync = true
 
 oparser = OptionParser.new do |opts|
-  opts.banner = "usage: #$0 [-s SIZE[k|m|g]] [-n #FILES] [-f] [-t] [-z] FILENAME"
+  opts.banner = "usage: #$0 [-s SIZE[k|m|g]] [-n #FILES] [-f] [-t] [-z] [-e] FILENAME"
   opts.on('-s SIZE', 'Maximum size of each file') do |s|
     num, suffix = s[0...-1], s[-1, 1]
     size =
@@ -49,6 +52,10 @@ oparser = OptionParser.new do |opts|
   opts.on('-z', 'Gzip archive log') do |z|
     raise RuntimeError, 'gzip executable not found' if `which gzip`.empty?
     gzip = z
+  end
+
+  opts.on('-e', 'Outputs logs to stderr') do |e|
+    putstderr = e
   end
 end
 
@@ -108,6 +115,12 @@ while true
           file.fsync
         else
           file.flush
+        end
+
+        if putstderr
+          $stderr.puts line
+        else
+          $stdout.puts line
         end
       end
       break
